@@ -1,0 +1,22 @@
+services:
+  frontend:
+    build:
+      context: path/to/frontend
+      dockerfile: Dockerfile
+      args:
+        REACT_APP_API_URL: YOUR_API_URL_OR_YOUR_IP:PORT
+    ports:
+      - "3034:80"
+    restart: always
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: path/to/backend
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5001"
+    restart: always
+    env_file:
+      - path/to/backend/.env
