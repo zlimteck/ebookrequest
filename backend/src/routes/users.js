@@ -35,9 +35,6 @@ router.post('/', requireAuth, requireAdmin, async (req, res) => {
       });
     }
     
-    // Hacher le mot de passe
-    const hashedPassword = await bcrypt.hash(password, 10);
-    
     // Créer un token de vérification d'email
     const verificationToken = crypto.randomBytes(20).toString('hex');
     const verificationExpires = new Date();
@@ -47,7 +44,7 @@ router.post('/', requireAuth, requireAdmin, async (req, res) => {
     const newUser = new User({
       username,
       email: email.toLowerCase(),
-      password: hashedPassword,
+      password,
       role: role || 'user',
       emailVerificationToken: verificationToken,
       emailVerificationExpires: verificationExpires
