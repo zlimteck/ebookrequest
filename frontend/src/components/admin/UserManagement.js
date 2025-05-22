@@ -265,6 +265,16 @@ const UserManagement = () => {
                       Date d'inscription <SortIcon column="createdAt" sortConfig={sortConfig} />
                     </div>
                   </th>
+                  <th onClick={() => requestSort('lastLogin')}>
+                    <div className={styles.tableHeader}>
+                      Dernière connexion <SortIcon column="lastLogin" sortConfig={sortConfig} />
+                    </div>
+                  </th>
+                  <th onClick={() => requestSort('lastActivity')}>
+                    <div className={styles.tableHeader}>
+                      Dernière activité <SortIcon column="lastActivity" sortConfig={sortConfig} />
+                    </div>
+                  </th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -284,6 +294,8 @@ const UserManagement = () => {
                       <td><RoleBadge role={user.role} /></td>
                       <td><EmailStatus verified={user.isEmailVerified} /></td>
                       <td>{formatDate(user.createdAt)}</td>
+                      <td>{user.lastLogin ? formatDate(user.lastLogin) : 'Jamais'}</td>
+                      <td>{user.lastActivity ? formatDate(user.lastActivity) : 'Inconnue'}</td>
                       <td>
                         <div className={styles.actionButtons}>
                           <button 

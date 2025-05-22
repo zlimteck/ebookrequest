@@ -101,10 +101,18 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Identifiants invalides.' });
     }
     
+    // Mise à jour de la dernière connexion
+    user.lastLogin = new Date();
+    user.lastActivity = new Date();
+    await user.save();
+    
     const token = jwt.sign({ 
       id: user._id, 
       role: user.role 
     }, JWT_SECRET, { expiresIn: '1d' });
+    
+    const userResponse = user.toObject();
+    delete userResponse.password;
     
     res.json({ 
       token, 
@@ -113,7 +121,9 @@ router.post('/login', async (req, res) => {
         id: user._id,
         username: user.username,
         email: user.email,
-        role: user.role
+        role: user.role,
+        lastLogin: user.lastLogin,
+        lastActivity: user.lastActivity
       }
     });
   } catch (err) {

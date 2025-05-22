@@ -10,6 +10,7 @@ import VerifyEmail from './pages/auth/VerifyEmail';
 import UserSettings from './components/UserSettings';
 import styles from './styles/Navbar.module.css';
 import { checkAuth, logout as authLogout } from './services/authService';
+import useActivityTracker from './hooks/useActivityTracker';
 
 document.body.style.margin = '0';
 document.body.style.padding = '0';
@@ -21,6 +22,8 @@ function App() {
   const isMobile = windowWidth < 768;
   const isTablet = windowWidth >= 768 && windowWidth <= 1024;
   const [isLoading, setIsLoading] = useState(true);
+  
+  useActivityTracker();
 
   useEffect(() => {
     const handleResize = () => {

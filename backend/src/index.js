@@ -9,6 +9,7 @@ import pushoverRoutes from './routes/pushover.js';
 import notificationRoutes from './routes/notifications.js';
 import userRoutes from './routes/user.js';
 import adminUserRoutes from './routes/users.js';
+import activityRoutes from './routes/activity.js';
 
 // Chargement des variables d'environnement
 dotenv.config();
@@ -52,6 +53,7 @@ app.use('/api/pushover', pushoverRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin/users', adminUserRoutes);
+app.use('/api/activity', activityRoutes);
 
 // Route test
 app.get('/', (req, res) => {

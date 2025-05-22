@@ -102,8 +102,8 @@ router.get('/', requireAuth, requireAdmin, async (req, res) => {
   try {
     const users = await User.find(
       {},
-      'username email role emailVerified createdAt updatedAt'
-    );
+      'username email role emailVerified createdAt updatedAt lastLogin lastActivity'
+    ).sort({ createdAt: -1 });
     res.json(users);
   } catch (error) {
     console.error('Erreur lors de la récupération des utilisateurs:', error);
