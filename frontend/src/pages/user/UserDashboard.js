@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axiosAdmin from './axiosAdmin';
+import axiosAdmin from '../../axiosAdmin';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import styles from './UserDashboard.module.css';

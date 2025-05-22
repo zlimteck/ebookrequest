@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import styles from '../user/UserForm.module.css';
 import { useNavigate } from 'react-router-dom';
-import styles from './UserForm.module.css';
-import { checkAuth } from './services/authService';
+import { checkAuth } from '../../services/authService';
 const REACT_APP_API_URL = process.env.REACT_APP_API_URL;
 
 function Login() {

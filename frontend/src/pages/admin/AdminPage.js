@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import axiosAdmin from './axiosAdmin';
+import axiosAdmin from '../../axiosAdmin';
 import styles from './AdminPage.module.css';
 import { toast } from 'react-toastify';
-import PushoverConfig from './components/admin/PushoverConfig';
-import UserManagement from './components/admin/UserManagement';
+import PushoverConfig from '../../components/admin/PushoverConfig';
+import UserManagement from '../../components/admin/UserManagement';
 
 const REACT_APP_API_URL = process.env.REACT_APP_API_URL;
 

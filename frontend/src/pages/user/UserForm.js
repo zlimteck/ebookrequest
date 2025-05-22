@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axiosAdmin from './axiosAdmin';
-import GoogleBooksSearch from './GoogleBooksSearch';
-import { compressImage, isImage } from './utils/imageCompressor';
+import axiosAdmin from '../../axiosAdmin';
+import GoogleBooksSearch from '../../components/GoogleBooksSearch';
+import { compressImage, isImage } from '../../utils/imageCompressor';
 import styles from './UserForm.module.css';
 
 // Composant pour afficher les informations du livre sélectionné
