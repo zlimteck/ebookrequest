@@ -1,4 +1,4 @@
-# E-Book Request
+# Ebook Request
 
 ![image](https://zupimages.net/up/25/20/wdmb.png)
 
@@ -39,6 +39,12 @@ ebookrequest/
     └── src/
         ├── components/
         ├── pages/
+            ├── admin/
+            ├── auth/
+            ├── user/
+        ├── services/
+        ├── styles/
+        ├── utils/
         └── App.js
 ```
 
