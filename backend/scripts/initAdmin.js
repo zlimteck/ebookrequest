@@ -50,13 +50,10 @@ async function initAdmin() {
       process.exit(1);
     }
 
-    // Hacher le mot de passe
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Créer l'utilisateur admin
+    // Créer l'utilisateur admin (le mot de passe sera haché par le middleware pre('save') du modèle User)
     const admin = new User({
       username,
-      password: hashedPassword,
+      password,
       role: 'admin'
     });
 
