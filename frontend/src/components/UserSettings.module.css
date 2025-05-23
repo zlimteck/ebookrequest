@@ -226,7 +226,7 @@ input:focus + .slider {
 @media (max-width: 768px) {
   .settingsContainer {
     padding: 1.5rem 1.25rem;
-    margin: 1rem 0.5rem;
+    margin: 1.5rem 0.5rem;
     width: calc(100% - 1rem);
     box-sizing: border-box;
   }

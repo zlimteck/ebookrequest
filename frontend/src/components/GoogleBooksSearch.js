@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from '../axiosAdmin';
 import styles from './GoogleBooksSearch.module.css';
 
@@ -23,36 +23,82 @@ const GoogleBooksSearch = ({ onSelectBook }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [results, setResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   const [error, setError] = useState('');
   const [hasSearched, setHasSearched] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
+  const searchTimeoutRef = useRef(null);
+  const inputRef = useRef(null);
+  const dropdownRef = useRef(null);
 
-  const searchBooks = async (e) => {
-    e.preventDefault();
-    const searchTerm = query.trim();
-    if (!searchTerm) return;
+  // Fonction pour effectuer la recherche
+  const searchBooks = async (searchTerm, isAutoSuggest = false) => {
+    if (!searchTerm.trim()) {
+      if (!isAutoSuggest) setResults([]);
+      return;
+    }
     
-    setSearchQuery(searchTerm);
+    if (!isAutoSuggest) {
+      setSearchQuery(searchTerm);
+      setHasSearched(true);
+      setShowSuggestions(false);
+    }
+    
     setIsLoading(true);
     setError('');
-    setResults([]);
-    setHasSearched(true);
     
     try {
-      // Utiliser l'API du backend au lieu d'appeler directement Google Books
       const response = await axios.get('/api/books/search', {
         params: {
           q: searchTerm,
-          maxResults: 6
+          maxResults: isAutoSuggest ? 5 : 6
         }
       });
       
-      setResults(response.data || []);
+      if (isAutoSuggest) {
+        setSuggestions(response.data || []);
+      } else {
+        setResults(response.data || []);
+      }
     } catch (err) {
       console.error('Erreur lors de la recherche de livres:', err);
       setError(err.response?.data?.message || 'Erreur lors de la recherche. Veuillez réessayer.');
-      setResults([]);
+      if (!isAutoSuggest) setResults([]);
+      setSuggestions([]);
     } finally {
       setIsLoading(false);
+    }
+  };
+  
+  // Gestionnaire de soumission du formulaire
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    searchBooks(query.trim(), false);
+  };
+  
+  // Gestionnaire de saisie avec debounce
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    setQuery(value);
+    
+    // Réinitialiser le timeout précédent
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    
+    if (value.trim().length > 2) {
+      setIsTyping(true);
+      setShowSuggestions(true);
+      
+      // Définir un nouveau timeout
+      searchTimeoutRef.current = setTimeout(() => {
+        searchBooks(value.trim(), true);
+        setIsTyping(false);
+      }, 500); // Délai de 500ms
+    } else {
+      setShowSuggestions(false);
+      setSuggestions([]);
     }
   };
 
@@ -75,89 +121,111 @@ const GoogleBooksSearch = ({ onSelectBook }) => {
     setQuery('');
   };
 
+  // Gestion du clic en dehors du dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target) && 
+          inputRef.current && !inputRef.current.contains(event.target)) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Sélection d'une suggestion
+  const handleSuggestionClick = (book) => {
+    handleSelectBook(book);
+    setShowSuggestions(false);
+  };
+
+  // Afficher les suggestions ou les résultats de recherche
+  const displayResults = showSuggestions ? suggestions : results;
+  const showResults = (showSuggestions && suggestions.length > 0) || results.length > 0 || hasSearched;
+  const showNoResults = hasSearched && results.length === 0 && !isLoading && !showSuggestions;
+  const showInitialState = !hasSearched && !showSuggestions && !isLoading;
+
   return (
     <div className={styles.googleBooksSearch}>
-      <form onSubmit={searchBooks} className={styles.searchForm}>
+      <form onSubmit={handleSubmit} className={styles.searchForm}>
         <div className={styles.searchInputContainer}>
           <div className={styles.inputWrapper}>
             <input
+              ref={inputRef}
               type="text"
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={handleInputChange}
+              onFocus={() => query.length > 2 && setShowSuggestions(true)}
               placeholder="Rechercher un livre par titre, auteur ou ISBN..."
               className={styles.searchInput}
               aria-label="Rechercher un livre"
+              autoComplete="off"
             />
           </div>
           <div className={styles.buttonWrapper}>
             <button 
               type="submit" 
               className={styles.searchButton}
-              disabled={isLoading || !query.trim()}
-              aria-label="Lancer la recherche"
+              disabled={isLoading || query.trim().length < 3}
             >
               {isLoading ? 'Recherche...' : 'Rechercher'}
             </button>
           </div>
         </div>
       </form>
-      
-      {error && <div className={styles.error} role="alert">{error}</div>}
-      
+
       <div className={styles.resultsContainer}>
         {isLoading ? (
           <LoadingSpinner />
-        ) : hasSearched && results.length === 0 ? (
-          <NoResults query={searchQuery} />
-        ) : results.length > 0 ? (
-          <>
-            <h3 className={styles.resultsTitle}>
-              {results.length} résultat{results.length > 1 ? 's' : ''} pour "{searchQuery}"
-            </h3>
-            <div className={styles.booksGrid}>
-              {results.map((book) => (
-                <div 
-                  key={book.id} 
-                  className={styles.bookCard}
-                  onClick={() => handleSelectBook(book)}
-                  role="button"
-                  tabIndex="0"
-                  onKeyDown={(e) => e.key === 'Enter' && handleSelectBook(book)}
-                  aria-label={`Sélectionner ${book.volumeInfo.title} par ${book.volumeInfo.authors?.join(', ') || 'auteur inconnu'}`}
-                >
-                  <div className={styles.bookCover}>
-                    {book.volumeInfo.imageLinks?.thumbnail ? (
-                      <img 
-                        src={book.volumeInfo.imageLinks.thumbnail.replace('http://', 'https://')} 
-                        alt={`Couverture de ${book.volumeInfo.title}`}
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className={styles.noCover}>
-                        <span>Couverture non disponible</span>
-                      </div>
-                    )}
-                  </div>
-                  <div className={styles.bookInfo}>
-                    <h4>{book.volumeInfo.title}</h4>
-                    <p>{book.volumeInfo.authors?.join(', ') || 'Auteur inconnu'}</p>
-                    {book.volumeInfo.publishedDate && (
-                      <p>Année: {new Date(book.volumeInfo.publishedDate).getFullYear()}</p>
-                    )}
-                    {book.volumeInfo.pageCount && (
-                      <p>{book.volumeInfo.pageCount} pages</p>
-                    )}
-                  </div>
+        ) : showResults ? (
+          <div className={styles.booksGrid}>
+            {displayResults.map((book) => (
+              <div 
+                key={book.id} 
+                className={styles.bookCard}
+                onClick={() => handleSelectBook(book)}
+              >
+                <div className={styles.bookCover}>
+                  {book.volumeInfo.imageLinks?.thumbnail ? (
+                    <img 
+                      src={book.volumeInfo.imageLinks.thumbnail} 
+                      alt={book.volumeInfo.title}
+                    />
+                  ) : (
+                    <div className={styles.noCover}>
+                      📚<br />
+                      <span>Pas de couverture</span>
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
-          </>
-        ) : (
+                <div className={styles.bookInfo}>
+                  <h4>{book.volumeInfo.title}</h4>
+                  {book.volumeInfo.authors && (
+                    <p className={styles.bookAuthor}>
+                      {book.volumeInfo.authors.join(', ')}
+                    </p>
+                  )}
+                  {book.volumeInfo.publishedDate && (
+                    <p className={styles.bookMeta}>
+                      {new Date(book.volumeInfo.publishedDate).getFullYear()}
+                      {book.volumeInfo.pageCount && ` • ${book.volumeInfo.pageCount} pages`}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : showNoResults ? (
+          <NoResults query={query} />
+        ) : showInitialState ? (
           <div className={styles.initialState}>
             <h3>Recherchez un livre</h3>
-            <p>Entrez un titre, un auteur ou un ISBN pour commencer votre recherche.</p>
+            <p>Commencez à taper pour voir les suggestions de livres</p>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );

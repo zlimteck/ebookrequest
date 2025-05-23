@@ -369,7 +369,8 @@ function UserForm() {
   }
 
   return (
-    <div className={`${styles.formContainer} ${styles.requestFormContainer}`}>
+    <div className={`${styles.formContainer} ${styles.requestForm}`}>
+
       <div className={styles.logoContainer}>
         <img src="/img/logo.png" alt="Logo" className={styles.logo} />
       </div>
