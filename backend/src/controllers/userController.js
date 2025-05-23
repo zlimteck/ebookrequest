@@ -92,25 +92,47 @@ export const updateUserProfile = async (req, res) => {
 export const verifyEmail = async (req, res) => {
   try {
     const { token } = req.params;
-    
     const user = await User.findOne({
       emailVerificationToken: token,
       emailVerificationExpires: { $gt: Date.now() }
     });
     
     if (!user) {
-      return res.status(400).json({ error: 'Lien de vérification invalide ou expiré.' });
+      return res.status(400).json({ 
+        success: false,
+        error: 'Lien de vérification invalide ou expiré.' 
+      });
     }
     
     user.emailVerified = true;
     user.emailVerificationToken = undefined;
     user.emailVerificationExpires = undefined;
     await user.save();
+    if (req.user) {
+      return res.json({ 
+        success: true, 
+        message: 'Email vérifié avec succès !',
+        user: {
+          id: user._id,
+          username: user.username,
+          email: user.email,
+          role: user.role,
+          emailVerified: true
+        }
+      });
+    }
     
-    res.json({ success: true, message: 'Email vérifié avec succès !' });
+    res.json({ 
+      success: true, 
+      message: 'Email vérifié avec succès ! Veuillez vous connecter.'
+    });
+    
   } catch (error) {
     console.error('Erreur lors de la vérification de l\'email:', error);
-    res.status(500).json({ error: 'Erreur lors de la vérification de l\'email' });
+    res.status(500).json({ 
+      success: false,
+      error: 'Une erreur est survenue lors de la vérification de l\'email' 
+    });
   }
 };
 

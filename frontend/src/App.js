@@ -32,6 +32,11 @@ function App() {
 
     // Vérifier l'authentification au chargement
     const verifyAuth = async () => {
+      if (window.location.pathname.startsWith('/verify-email/')) {
+        setIsLoading(false);
+        return;
+      }
+
       try {
         const { isAuthenticated, user } = await checkAuth();
         if (isAuthenticated && user) {
@@ -39,17 +44,19 @@ function App() {
           localStorage.setItem('username', user.username);
           setIsAdmin(user.role === 'admin');
           
-          // Rediriger vers la page appropriée si sur la page de login
-          if (window.location.pathname === '/login') {
+          // Ne pas rediriger depuis la page de login si on a un token de vérification
+          const hasVerifyToken = window.location.pathname.includes('verify=') || 
+                               localStorage.getItem('pendingEmailVerification');
+          if (window.location.pathname === '/login' && !hasVerifyToken) {
             navigate(user.role === 'admin' ? '/admin' : '/dashboard', { replace: true });
           }
-        } else if (window.location.pathname !== '/login') {
-          // Rediriger vers la page de login si non authentifié et pas déjà sur la page de login
+        } else if (!window.location.pathname.startsWith('/verify-email/')) {
           navigate('/login', { replace: true });
         }
       } catch (error) {
         console.error('Erreur lors de la vérification de l\'authentification:', error);
-        if (window.location.pathname !== '/login') {
+        if (!window.location.pathname.startsWith('/verify-email/') && 
+            !window.location.pathname.startsWith('/login')) {
           navigate('/login', { replace: true });
         }
       } finally {
@@ -72,20 +79,35 @@ function App() {
 
   const location = useLocation();
   const isAuthPage = location.pathname === '/login';
+  const isVerifyEmailPage = location.pathname.startsWith('/verify-email/');
   const isAdminPage = location.pathname.startsWith('/admin');
   const token = localStorage.getItem('token');
 
-  if (!token && !isAuthPage) {
-    return <Navigate to="/login" replace state={{ from: location }} />;
-  }
+  // Ne pas rediriger depuis la page de vérification d'email
+  if (!isVerifyEmailPage) {
+    if (!token && !isAuthPage) {
+      return <Navigate to="/login" replace state={{ from: location }} />;
+    }
 
-  if (token && isAuthPage) {
-    const role = localStorage.getItem('role');
-    return <Navigate to={role === 'admin' ? '/admin' : '/dashboard'} replace />;
+    // Ne pas rediriger depuis la page de login si on a un token de vérification
+    const hasPendingVerification = localStorage.getItem('pendingEmailVerification');
+    if (token && isAuthPage && !hasPendingVerification) {
+      const role = localStorage.getItem('role');
+      return <Navigate to={role === 'admin' ? '/admin' : '/dashboard'} replace />;
+    }
   }
 
   if (isLoading) {
     return <div className="loading">Chargement...</div>;
+  }
+
+  // Route de vérification d'email accessible sans authentification
+  if (location.pathname.startsWith('/verify-email/')) {
+    return (
+      <div style={{ margin: 0, padding: 0, width: '100%', overflowX: 'hidden' }}>
+        <VerifyEmail />
+      </div>
+    );
   }
 
   if (isAuthPage) {
@@ -93,7 +115,7 @@ function App() {
       <div style={{ margin: 0, padding: 0, width: '100%', overflowX: 'hidden' }}>
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/verify-email/:token" element={<VerifyEmail />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </div>
     );
@@ -184,12 +206,8 @@ function App() {
           } 
         />
         <Route 
-          path="/verify-email/:token?" 
-          element={
-            token ?
-            <VerifyEmail /> :
-            <Navigate to="/login" state={{ from: '/verify-email' }} replace />
-          } 
+          path="/verify-email/:token" 
+          element={<VerifyEmail />} 
         />
         <Route path="/" element={token ? <UserForm /> : <Navigate to="/login" replace />} />
         {/* Redirection pour les routes inconnues */}
