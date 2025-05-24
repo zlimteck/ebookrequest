@@ -9,6 +9,7 @@ import pushoverRoutes from './routes/pushover.js';
 import notificationRoutes from './routes/notifications.js';
 import userRoutes from './routes/user.js';
 import adminUserRoutes from './routes/users.js';
+import adminRoutes from './routes/admin.js';
 import activityRoutes from './routes/activity.js';
 
 // Chargement des variables d'environnement
@@ -49,6 +50,7 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/requests', bookRequestRoutes);
 app.use('/api/books', googleBooksRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/api/pushover', pushoverRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/users', userRoutes);

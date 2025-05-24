@@ -109,7 +109,7 @@ router.post('/login', async (req, res) => {
     const token = jwt.sign({ 
       id: user._id, 
       role: user.role 
-    }, JWT_SECRET, { expiresIn: '1d' });
+    }, JWT_SECRET, { expiresIn: '30d' });
     
     const userResponse = user.toObject();
     delete userResponse.password;
